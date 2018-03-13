@@ -1,0 +1,6 @@
+# govendor extra stuff
+vendor/*
+!vendor/vendor.json
+
+# the output directory
+output/*
