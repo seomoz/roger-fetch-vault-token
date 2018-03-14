@@ -1,4 +1,6 @@
 # roger-fetch-vault-token
+The purpose of roger-fetch-vault-token is interact with vault-mesos-gatekeeper and fetch
+a Vault token for use in a Mesos task.
 
 # Configuration
 
@@ -7,6 +9,10 @@
 * `GATEKEEPER_ADDR` - the URL to the Gatekeeper instance - (ie. `https://gatekeeper.url.example:19201`)
 
 Note: `MESOS_TASK_ID` is also used but will be set via Mesos
+
+# Usage
+This can be used as a standalone binary in a wrapper script inside a Mesos container
+with an `--echo-token` flag or as a plugin to [vaultexec](https://github.com/funnylookinhat/vaultexec)
 
 # Builds and Releases
 
