@@ -1,5 +1,6 @@
-// roger-gk-mesos takes environment variables and returns JSON with an unwrapped Vault Token
-// to stdout for the vaultexec plugin to use
+// roger-fetch-vault-toke takes environment variables and returns an unwrapped Vault Token
+// in a JSON to stdout for the vaultexec plugin to use or to stdout directly for
+// wrapper scripts to use
 package main
 
 import (

@@ -5,10 +5,10 @@ RUN mkdir /output && \
   go get github.com/mitchellh/gox && \
   go get -u github.com/kardianos/govendor
 
-COPY vendor/vendor.json /go/src/roger-gk-mesos/vendor/vendor.json
-COPY main.go /go/src/roger-gk-mesos/main.go
+COPY vendor/vendor.json /go/src/roger-fetch-vault-token/vendor/vendor.json
+COPY main.go /go/src/roger-fetch-vault-token/main.go
 
-WORKDIR /go/src/roger-gk-mesos
+WORKDIR /go/src/roger-fetch-vault-token
 
 RUN govendor sync
 
