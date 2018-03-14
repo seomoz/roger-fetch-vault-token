@@ -18,14 +18,14 @@ type VaultExecConfig struct {
 }
 
 func main() {
-	setVaultEnv := flag.Bool("env", false, "set VAULT_TOKEN environment variable instead of JSON output")
+	echoToken := flag.Bool("echo-token", false, "echos unwrapped Vault token to stdout for use by wrapper scripts")
 	flag.Parse()
 	token, err := gatekeeper.EnvRequestVaultToken()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: could not fetch token: %s\n", err)
 		os.Exit(1)
 	}
-	if *setVaultEnv == true {
+	if *echoToken == true {
 		fmt.Printf(token)
 	} else {
 		vec := VaultExecConfig{Token: token}
