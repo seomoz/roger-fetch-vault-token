@@ -1,0 +1,13 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "5pPDeNX2fx3e+FVmQJ6aZDZSji8=",
+			"path": "github.com/channelmeter/vault-gatekeeper-mesos/gatekeeper",
+			"revision": "101069b9ab6ae737ea947022f69ad600172367b9",
+			"revisionTime": "2017-09-30T01:36:45Z"
+		}
+	],
+	"rootPath": "roger-fetch-vault-token"
+}
