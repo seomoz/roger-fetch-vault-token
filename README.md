@@ -27,8 +27,3 @@ docker run -it --rm -v $(pwd)/output:/output roger-fetch-vault-token-build
 
 The roger-fetch-vault-token binaries will be in the $(pwd)/output folder on your machine
 
-## Releases
-NOTE: Haven't done this yet so steps are not great
-* create git tag
-* edit release notes
-* upload binaries in output directory to Github as part of the release
