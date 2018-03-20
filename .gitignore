@@ -1,3 +1,5 @@
+.DS_Store
+
 # govendor extra stuff
 vendor/*
 !vendor/vendor.json
