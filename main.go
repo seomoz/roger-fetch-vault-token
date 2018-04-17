@@ -5,9 +5,12 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	"github.com/channelmeter/vault-gatekeeper-mesos/gatekeeper"
 )
@@ -18,6 +21,17 @@ type vaultExecConfig struct {
 	Path    string `json:"path"`
 }
 
+// Do a case insensitive search for MESOS_TASK_ID
+func getTaskId(envVars []string) (string, error) {
+	for _, envVar := range envVars {
+		res := strings.SplitN(envVar, "=", 2)
+		if strings.ToUpper(res[0]) == "MESOS_TASK_ID" {
+			return res[1], nil
+		}
+	}
+	return "", errors.New("mesos task id not found")
+}
+
 func main() {
 	echoToken := flag.Bool(
 		"echo-token",
@@ -25,7 +39,12 @@ func main() {
 		"echos unwrapped Vault token to stdout for use by wrapper scripts")
 	flag.Parse()
 
-	token, err := gatekeeper.EnvRequestVaultToken()
+	mesosTaskId, err := getTaskId(os.Environ())
+	if err != nil {
+		log.Fatalf("ERROR: %s\n", err)
+	}
+
+	token, err := gatekeeper.RequestVaultToken(mesosTaskId)
 	if err != nil {
 		log.Fatalf("ERROR: could not fetch token: %s\n", err)
 	}
