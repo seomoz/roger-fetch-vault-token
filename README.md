@@ -1,16 +1,28 @@
 # roger-fetch-vault-token
 
-The purpose of roger-fetch-vault-token is interact with vault-mesos-gatekeeper and fetch
-a Vault token for use in a Mesos task.
+Binary to fetch Vault tokens for applications. Currently support two modes:
+Kubernetes Vault auth
+Vault-Gatekeeper-Mesos
+
+This is primarily a plugin to [vaultexec](https://github.com/funnylookinhat/vaultexec)
 
 ## Configuration
 
 ### Required Envionment Variables
 
 * `VAULT_ADDR` - the URL to the Vault instance - (ie. `https://vault.right.url:8200`)
+
+#### Vault-Gatekeeper-Mesos Required Variables
+
 * `GATEKEEPER_ADDR` - the URL to the Gatekeeper instance - (ie. `https://gatekeeper.url.example:19201`)
 
 Note: `MESOS_TASK_ID` is also used but will be set via Mesos
+
+#### Kubernetes Required Variables
+
+* `VAULT_ROLE` - the role used by the application in Vault - (ie. `k8s-test-role`)
+
+Note: `KUBERNETES_SERVICE_HOST` is also used to determine if Kubernetes is used but will be set by Kubnernetes
 
 ## Usage
 
