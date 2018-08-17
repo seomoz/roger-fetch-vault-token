@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/channelmeter/vault-gatekeeper-mesos/gatekeeper"
 )
@@ -18,6 +19,22 @@ type vaultExecConfig struct {
 	Path    string `json:"path"`
 }
 
+func determineScheduler() (string, error) {
+	if os.Getenv("MESOS_TASK_ID") != "" {
+		return "mesos", nil
+	}
+
+	return "", fmt.Errorf("could not determine scheduler based on environment variables")
+}
+
+func fetchToken() (string, error) {
+	token, err := gatekeeper.EnvRequestVaultToken()
+	if err != nil {
+		return "", fmt.Errorf("could not fetch token: %s", err)
+	}
+	return token, nil
+}
+
 func main() {
 	echoToken := flag.Bool(
 		"echo-token",
@@ -25,9 +42,20 @@ func main() {
 		"echos unwrapped Vault token to stdout for use by wrapper scripts")
 	flag.Parse()
 
-	token, err := gatekeeper.EnvRequestVaultToken()
+	scheduler, err := determineScheduler()
 	if err != nil {
-		log.Fatalf("could not fetch token: %s\n", err)
+		log.Fatal(err)
+	}
+
+	var token string
+	switch scheduler {
+	case "mesos":
+		token, err = fetchToken()
+		if err != nil {
+			log.Fatal(err)
+		}
+	default:
+		log.Fatal("no supported scheduler found")
 	}
 
 	if *echoToken == true {
