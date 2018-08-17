@@ -39,7 +39,7 @@ func main() {
 	echoToken := flag.Bool(
 		"echo-token",
 		false,
-		"echos unwrapped Vault token to stdout for use by wrapper scripts")
+		"echoes unwrapped Vault token to stdout for use by wrapper scripts")
 	flag.Parse()
 
 	scheduler, err := determineScheduler()
