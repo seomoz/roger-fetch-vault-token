@@ -5,12 +5,9 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"log"
-	"os"
-	"strings"
 
 	"github.com/channelmeter/vault-gatekeeper-mesos/gatekeeper"
 )
@@ -21,17 +18,6 @@ type vaultExecConfig struct {
 	Path    string `json:"path"`
 }
 
-// Do a case insensitive search for MESOS_TASK_ID
-func getTaskId(envVars []string) (string, error) {
-	for _, envVar := range envVars {
-		res := strings.SplitN(envVar, "=", 2)
-		if strings.ToUpper(res[0]) == "MESOS_TASK_ID" {
-			return res[1], nil
-		}
-	}
-	return "", errors.New("mesos task id not found")
-}
-
 func main() {
 	echoToken := flag.Bool(
 		"echo-token",
@@ -39,14 +25,9 @@ func main() {
 		"echos unwrapped Vault token to stdout for use by wrapper scripts")
 	flag.Parse()
 
-	mesosTaskId, err := getTaskId(os.Environ())
+	token, err := gatekeeper.EnvRequestVaultToken()
 	if err != nil {
-		log.Fatalf("ERROR: %s\n", err)
-	}
-
-	token, err := gatekeeper.RequestVaultToken(mesosTaskId)
-	if err != nil {
-		log.Fatalf("ERROR: could not fetch token: %s\n", err)
+		log.Fatalf("could not fetch token: %s\n", err)
 	}
 
 	if *echoToken == true {
@@ -55,7 +36,7 @@ func main() {
 		vec := vaultExecConfig{Token: token}
 		b, err := json.Marshal(vec)
 		if err != nil {
-			log.Fatalf("ERROR: conversion to JSON failed: %s\n", err)
+			log.Fatalf("conversion to JSON failed: %s\n", err)
 		}
 		fmt.Printf(string(b))
 	}
