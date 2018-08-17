@@ -4,11 +4,16 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/channelmeter/vault-gatekeeper-mesos/gatekeeper"
 )
@@ -23,11 +28,83 @@ func determineScheduler() (string, error) {
 	if os.Getenv("MESOS_TASK_ID") != "" {
 		return "mesos", nil
 	}
-
+	if os.Getenv("KUBERNETES_SERVICE_HOST") != "" {
+		return "kubernetes", nil
+	}
 	return "", fmt.Errorf("could not determine scheduler based on environment variables")
 }
 
-func fetchToken() (string, error) {
+func readJwtToken(path string) (string, error) {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", fmt.Errorf("failed to read jwt token")
+	}
+
+	return string(bytes.TrimSpace(data)), nil
+}
+
+func k8sFetchToken() (string, error) {
+	var vaultAddr string
+
+	vaultAddr = os.Getenv("VAULT_ADDR")
+	if vaultAddr == "" {
+		vaultAddr = "https://127.0.0.1:8200"
+	}
+
+	vaultK8SMountPath := os.Getenv("VAULT_K8S_MOUNT_PATH")
+	if vaultK8SMountPath == "" {
+		vaultK8SMountPath = "kubernetes"
+	}
+
+	role := os.Getenv("VAULT_ROLE")
+	if role == "" {
+		return "", fmt.Errorf("required environment variable missing: VAULT_ROLE")
+	}
+
+	saPath := os.Getenv("SERVICE_ACCOUNT_PATH")
+	if saPath == "" {
+		saPath = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+	}
+
+	jwt, err := readJwtToken(saPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	url := vaultAddr + "/v1/auth/" + vaultK8SMountPath + "/login"
+	postBody := strings.NewReader("{\"role\": \"" + role + "\", \"jwt\": \"" + jwt + "\"}")
+
+	c := &http.Client{Timeout: 3 * time.Second}
+	req, err := http.NewRequest("POST", url, postBody)
+	req.Header.Set("Content-Type", "application/json")
+	if err != nil {
+		return "", fmt.Errorf("http request creation failed: %s", err)
+	}
+
+	resp, err := c.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("http call failed: %s", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("http call failed: %s", resp.Status)
+	}
+
+	var s struct {
+		Auth struct {
+			ClientToken string `json:"client_token"`
+		} `json:"auth"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&s); err != nil {
+		return "", fmt.Errorf("failed to read body")
+	}
+
+	return s.Auth.ClientToken, nil
+}
+
+func mesosFetchToken() (string, error) {
 	token, err := gatekeeper.EnvRequestVaultToken()
 	if err != nil {
 		return "", fmt.Errorf("could not fetch token: %s", err)
@@ -50,12 +127,17 @@ func main() {
 	var token string
 	switch scheduler {
 	case "mesos":
-		token, err = fetchToken()
+		token, err = mesosFetchToken()
+		if err != nil {
+			log.Fatal(err)
+		}
+	case "kubernetes":
+		token, err = k8sFetchToken()
 		if err != nil {
 			log.Fatal(err)
 		}
 	default:
-		log.Fatal("no supported scheduler found")
+		log.Fatalf("unsupported scheduler type: %s", scheduler)
 	}
 
 	if *echoToken == true {
