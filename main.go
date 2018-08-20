@@ -24,6 +24,9 @@ type vaultExecConfig struct {
 	Path    string `json:"path"`
 }
 
+// Check for the presence of two environment variables
+// Check Mesos first and then check for Kubernetes after
+// These schedulers in our environment always set these variables
 func determineScheduler() (string, error) {
 	if os.Getenv("MESOS_TASK_ID") != "" {
 		return "mesos", nil
@@ -34,6 +37,8 @@ func determineScheduler() (string, error) {
 	return "", fmt.Errorf("could not determine scheduler based on environment variables")
 }
 
+// Read the Kubernetes service account JWT
+// This is used to authenticate the container to Vault
 func readJwtToken(path string) (string, error) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -43,6 +48,8 @@ func readJwtToken(path string) (string, error) {
 	return string(bytes.TrimSpace(data)), nil
 }
 
+// Uses the service account JWT and the VAULT_ROLE variable
+// to login to Vault Kubernetes auth method and fetch a token
 func k8sFetchToken() (string, error) {
 	var vaultAddr string
 
@@ -51,6 +58,8 @@ func k8sFetchToken() (string, error) {
 		vaultAddr = "https://127.0.0.1:8200"
 	}
 
+	// This is the standard mount path for Vault Kubernetes auth method
+	// This variable will need to be set in each container if different
 	vaultK8SMountPath := os.Getenv("VAULT_K8S_MOUNT_PATH")
 	if vaultK8SMountPath == "" {
 		vaultK8SMountPath = "kubernetes"
@@ -61,6 +70,7 @@ func k8sFetchToken() (string, error) {
 		return "", fmt.Errorf("required environment variable missing: VAULT_ROLE")
 	}
 
+	// This is the default location of the service account JWT mount
 	saPath := os.Getenv("SERVICE_ACCOUNT_PATH")
 	if saPath == "" {
 		saPath = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -68,7 +78,7 @@ func k8sFetchToken() (string, error) {
 
 	jwt, err := readJwtToken(saPath)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	url := vaultAddr + "/v1/auth/" + vaultK8SMountPath + "/login"
