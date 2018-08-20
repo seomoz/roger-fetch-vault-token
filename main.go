@@ -78,7 +78,7 @@ func k8sFetchToken() (string, error) {
 
 	jwt, err := readJwtToken(saPath)
 	if err != nil {
-		return "", fmt.Errorf("%s", err)
+		return "", err
 	}
 
 	url := vaultAddr + "/v1/auth/" + vaultK8SMountPath + "/login"
