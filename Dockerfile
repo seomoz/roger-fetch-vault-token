@@ -1,15 +1,15 @@
-FROM golang:1.10.0-alpine3.7
+FROM golang:1.12.0-alpine
 
 RUN mkdir /output && \
   apk add --no-cache git && \
   go get github.com/mitchellh/gox && \
-  go get -u github.com/kardianos/govendor
+  mkdir /app
 
-COPY vendor/vendor.json /go/src/roger-fetch-vault-token/vendor/vendor.json
-COPY main.go /go/src/roger-fetch-vault-token/main.go
+WORKDIR /app
 
-WORKDIR /go/src/roger-fetch-vault-token
+COPY go.mod .
+RUN go mod download
 
-RUN govendor sync
+COPY main.go .
 
 CMD gox -output='/output/{{.Dir}}_{{.OS}}_{{.Arch}}' -tags='netgo' -ldflags='-w'
