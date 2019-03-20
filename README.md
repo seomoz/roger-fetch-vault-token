@@ -31,6 +31,13 @@ with an `--echo-token` flag or as a plugin to [vaultexec](https://github.com/fun
 
 ## Builds and Releases
 
+### Dependencies
+
+Note that this binary uses the vault-gatekeeper-mesos library at a very specific version.
+BE CAREFUL RUNNING `go get -u` AS TO NOT UPGRADE UNEXPECTEDLY
+
+The current version is `go get github.com/channelmeter/vault-gatekeeper-mesos/gatekeeper@0.6.0`
+
 ### Builds
 
 In order to build the roger-fetch-vault-token binaries, do the following:

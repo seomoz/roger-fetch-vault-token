@@ -1,9 +1,8 @@
 #
 .DS_Store
 
-# govendor extra stuff
+# go modules
 vendor/*
-!vendor/vendor.json
 
 # the output directory
 output/*
